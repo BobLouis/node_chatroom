@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatroom</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div id="chatbox"></div>
+  <input type="text" id="input" placeholder="輸入訊息...">
+  <script>
+    // 您的 index.html 初始設定
+    var name = prompt('請輸入用戶名：', "your name");
+    var text = '加入聊天室';
+    var time = new Date();
+    time = time.toLocaleTimeString();
+    var r = Math.random() * 255;
+    var g = Math.random() * 255;
+    var b = Math.random() * 255;
+    var color = `rgb(${r}, ${g}, ${b})`;
+
+    // 定義 appendComment 函式
+    const appendComment = (msgText, msgName, msgTime,msgColor) => {
+        // const msgColor = "rgb(0, 0, 255)"; // 設定為固定的藍色
+        var html = `<p style="color: ${msgColor};">【${msgName} ${msgTime}】 ${msgText}</p>`;
+        $('#chatbox').append(html);
+        var height = $('#chatbox').prop('scrollHeight');
+        $('#chatbox').scrollTop(height);
+    }
+
+
+
+
+    // Socket.io 連接與消息處理
+    const socket = io();
+
+    $('#input').keypress(function(e) {
+        if (e.which == 13) {  // Enter key pressed
+            let messageData = { text: $(this).val(), name, time, color };
+            socket.emit('message', messageData); // 發送消息到伺服器
+            appendComment(messageData.text, messageData.name, messageData.time, messageData.color); // 立即在客戶端渲染這條消息
+            $(this).val('');  // 清除輸入框
+        }
+    });
+
+
+
+
+    socket.on('message', function(data) {
+        // console.log(data.text, data.name, data.time)
+        appendComment(data.text, data.name, data.time, data.color);
+        // appendComment(data.text, data.name, data.time);
+    });
+
+    // 當使用者加入時，向聊天室發送通知
+    appendComment(text, name, time, color);
+
+  </script>
+</body>
+</html>
